@@ -15,6 +15,7 @@ extern "C" {
 int myrank, numranks, isZero;
 unsigned int curset, hNWSet, maxset, numevents; 
 MPI_Comm profile_comm;
+FILE *dataFile;
 
 UPC_NW_LinkMasks linkmask[] = { UPC_NW_LINK_A_MINUS,
 UPC_NW_LINK_A_PLUS,
@@ -40,6 +41,12 @@ INLINE void PROFILER_INIT()
   if(!myrank) {
     printf("Init intercepted by bgqcounter unit\n");
   }
+  char *filename = getenv("BGQ_COUNTER_FILE");
+  if(filename != NULL)
+    dataFile = fopen(filename,"w");
+  else
+    dataFile = stdout;
+
   Bgpm_Init(BGPM_MODE_SWDISTRIB);
   isZero = (Kernel_ProcessorID() == 0) ? 1 : 0;
   MPI_Comm_split(MPI_COMM_WORLD, isZero, myrank, &profile_comm);
@@ -106,12 +113,12 @@ INLINE void PROFILER_FINALIZE() {
         int coords[6];
         for(unsigned int j = 0; j < nranks; j++) {
           MPIX_Rank2torus(j*Kernel_ProcessCount(), coords); 
-          printf("%d %d ",i,j);
-          printf("%d %d %d %d %d %d ** ",coords[0],coords[1],coords[2],coords[3],coords[4],coords[5]);
+          fprintf(dataFile,"%d %d ",i,j);
+          fprintf(dataFile,"%d %d %d %d %d %d ** ",coords[0],coords[1],coords[2],coords[3],coords[4],coords[5]);
           for(unsigned int k = 0; k < 10*numevents; k++) {
-            printf("%lu ", allCounters[cnt++]);
+            fprintf(dataFile,"%lu ", allCounters[cnt++]);
           }
-          printf("\n");
+          fprintf(dataFile,"\n");
         }
       }
     }
