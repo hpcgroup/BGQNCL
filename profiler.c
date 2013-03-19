@@ -46,10 +46,12 @@ INLINE void PROFILER_INIT()
   if(isZero) {
     hNWSet = Bgpm_CreateEventSet();
     Bgpm_AddEvent(hNWSet, PEVT_NW_USER_PP_SENT);
+    Bgpm_AddEvent(hNWSet, PEVT_NW_USER_DYN_PP_SENT);
+    Bgpm_AddEvent(hNWSet, PEVT_NW_USER_ESC_PP_SENT);
     //Bgpm_AddEvent(hNWSet, PEVT_NW_USER_WORLD_COL_SENT);
     //Bgpm_AddEvent(hNWSet, PEVT_NW_USER_SUBC_COL_SENT);
     //Bgpm_AddEvent(hNWSet, PEVT_NW_COMMWORLD_COL_SENT);
-    numevents = 1;
+    numevents = 3;
     if (Bgpm_Attach(hNWSet, UPC_NW_ALL_TORUS_LINKS, 0) == BGPM_WALREADY_ATTACHED) {
       printf("Error: Another sw thread on node owns network link counters\n");
     }
@@ -101,8 +103,11 @@ INLINE void PROFILER_FINALIZE() {
           10*numevents, MPI_UNSIGNED_LONG_LONG, 0, profile_comm);
       if(!myrank) {
         unsigned int cnt = 0;
+        int coords[6];
         for(unsigned int j = 0; j < nranks; j++) {
+          MPIX_Rank2torus(j*Kernel_ProcessCount(), coords); 
           printf("%d %d ",i,j);
+          printf("%d %d %d %d %d %d ** ",coords[0],coords[1],coords[2],coords[3],coords[4],coords[5]);
           for(unsigned int k = 0; k < 10*numevents; k++) {
             printf("%lu ", allCounters[cnt++]);
           }
