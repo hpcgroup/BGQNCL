@@ -73,7 +73,7 @@ INLINE void PROFILER_INIT()
   MPI_Comm_split(MPI_COMM_WORLD, isZero, myrank, &profile_comm);
 #if BGQ_DEBUG
   if(isMaster) {
-    printf("Communicator split done, informing master\n");
+    printf("Communicator split done, find master\n");
   }
 #endif
 
@@ -81,7 +81,7 @@ INLINE void PROFILER_INIT()
   MPIX_Torus2rank(coords, &tmasterRank);
 #if BGQ_DEBUG
   if(isMaster) {
-    printf("Init intercepted by bgqcounter unit 5\n");
+    printf("Found master, informing master\n");
   }
 #endif
 
