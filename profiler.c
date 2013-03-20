@@ -8,6 +8,8 @@
 #include <firmware/include/personality.h>
 #include "bgpm/include/bgpm.h"
 
+#define BGQ_DEBUG 1
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -48,23 +50,50 @@ INLINE void PROFILER_INIT()
   if(isMaster) {
     printf("Init intercepted by bgqcounter unit\n");
   }
+
   char *filename = getenv("BGQ_COUNTER_FILE");
   if(filename != NULL)
     dataFile = fopen(filename,"w");
   else
     dataFile = stdout;
+#if BGQ_DEBUG
+  if(isMaster) {
+    printf("File opened, Initializing BGPM\n");
+  }
+#endif
 
   Bgpm_Init(BGPM_MODE_SWDISTRIB);
+#if BGQ_DEBUG
+  if(isMaster) {
+    printf("Initialized BGPM, Splitting communicator\n");
+  }
+#endif
+
   isZero = (coords[5] == 0) ? 1 : 0;
   MPI_Comm_split(MPI_COMM_WORLD, isZero, myrank, &profile_comm);
+#if BGQ_DEBUG
+  if(isMaster) {
+    printf("Communicator split done, informing master\n");
+  }
+#endif
 
   coords[0] = coords[1] = coords[2] = coords[3] = coords[4] = coords[5] = 0;
   MPIX_Torus2rank(coords, &tmasterRank);
+#if BGQ_DEBUG
+  if(isMaster) {
+    printf("Init intercepted by bgqcounter unit 5\n");
+  }
+#endif
 
   if(isMaster) {
     MPI_Comm_rank(profile_comm, &masterRank);
   }
   MPI_Bcast(&masterRank, 1, MPI_INT, tmasterRank, MPI_COMM_WORLD);
+#if BGQ_DEBUG
+  if(isMaster) {
+    printf("Informed master, attaching counters\n");
+  }
+#endif
 
   if(isZero) {
     hNWSet = Bgpm_CreateEventSet();

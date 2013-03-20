@@ -1,7 +1,7 @@
 #=============================================================================
 # Common Variables
-CC      = mpicc
-CXX     = mpicxx
+CC      = mpixlc
+CXX     = mpixlcxx
 COPTS   = -c -O3
 CXXOPTS = -c -O3
 LOPTS   = 
