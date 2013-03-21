@@ -100,12 +100,12 @@ INLINE void PROFILER_INIT()
     Bgpm_AddEvent(hNWSet, PEVT_NW_USER_PP_SENT);
     Bgpm_AddEvent(hNWSet, PEVT_NW_USER_DYN_PP_SENT);
     Bgpm_AddEvent(hNWSet, PEVT_NW_USER_ESC_PP_SENT);
-    //Bgpm_AddEvent(hNWSet, PEVT_NW_USER_WORLD_COL_SENT);
-    //Bgpm_AddEvent(hNWSet, PEVT_NW_USER_SUBC_COL_SENT);
-    //Bgpm_AddEvent(hNWSet, PEVT_NW_COMMWORLD_COL_SENT);
-    numevents = 3;
-    if (Bgpm_Attach(hNWSet, UPC_NW_ALL_TORUS_LINKS, 0) == BGPM_WALREADY_ATTACHED) {
-      printf("Error: Another sw thread on node owns network link counters\n");
+    Bgpm_AddEvent(hNWSet, PEVT_NW_USER_SUBC_COL_SENT);
+    Bgpm_AddEvent(hNWSet, PEVT_NW_USER_PP_RECV);
+    Bgpm_AddEvent(hNWSet, PEVT_NW_USER_PP_RECV_FIFO);
+    numevents = 6;
+    if (Bgpm_Attach(hNWSet, UPC_NW_ALL_TORUS_LINKS, 0) != 0) {
+      printf("Error: something went wrong in attaching link counters\n");
     }
     curset = maxset = 0;
     for(unsigned int i = 0; i < 10; i++) {

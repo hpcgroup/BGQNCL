@@ -12,7 +12,7 @@ all: libprofiler.a
 test-all: simple jacobi2dc jacobi2dcc
 
 libprofiler.a: intercepts.o profiler.o
-	ar -q libprofiler.a intercepts.o profiler.o
+	ar cr libprofiler.a intercepts.o profiler.o
 
 profiler.o: profiler.c profiler.h
 	$(CC) $(COPTS) -o profiler.o profiler.c ${INC}
