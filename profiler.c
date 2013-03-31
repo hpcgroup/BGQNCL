@@ -8,7 +8,9 @@
 #include <firmware/include/personality.h>
 #include "bgpm/include/bgpm.h"
 
-#define BGQ_DEBUG 1
+#define BGQ_DEBUG	0
+#define NUM_REGIONS	10
+#define NUM_TORUS_LINKS	10
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +36,7 @@ typedef struct _counters {
   uint64_t counters[60];
 } Counters;
 
-Counters values[10];
+Counters values[NUM_REGIONS];
 
 INLINE void PROFILER_INIT() 
 {
@@ -108,8 +110,8 @@ INLINE void PROFILER_INIT()
       printf("Error: something went wrong in attaching link counters\n");
     }
     curset = maxset = 0;
-    for(unsigned int i = 0; i < 10; i++) {
-      for(unsigned int j = 0; j < 10*numevents; j++) {
+    for(unsigned int i = 0; i < NUM_REGIONS; i++) {
+      for(unsigned int j = 0; j < NUM_TORUS_LINKS * numevents; j++) {
         values[i].counters[j] = 0;
       }
     }
@@ -130,7 +132,7 @@ INLINE void PROFILER_PCONTROL(int ctrl) {
       uint64_t val;
       unsigned int numEvts = Bgpm_NumEvents(hNWSet);
       assert(numEvts == numevents);
-      for(unsigned int i = 0; i < 10; i++) {
+      for(unsigned int i = 0; i < NUM_TORUS_LINKS; i++) {
         for(unsigned int j = 0; j < numevents; j++) {
           Bgpm_NW_ReadLinkEvent(hNWSet, j, linkmask[i], &val);
           values[curset].counters[cnt++] += val;
@@ -150,12 +152,13 @@ INLINE void PROFILER_FINALIZE() {
   if(isMaster) {
     printf("Finalize intercepted: numevents: %u, max set: %u\n",numevents, maxset);
     MPI_Comm_size(profile_comm,&nranks);
-    allCounters = (uint64_t*) malloc(10*numevents*nranks*sizeof(uint64_t));
+    allCounters = (uint64_t*) malloc(NUM_TORUS_LINKS * numevents * nranks *sizeof(uint64_t));
   }
   if(isZero) {
     for(unsigned int i = 1; i <= maxset; i++) {
-      MPI_Gather(values[i].counters, 10*numevents, MPI_UNSIGNED_LONG_LONG, allCounters, 
-          10*numevents, MPI_UNSIGNED_LONG_LONG, masterRank, profile_comm);
+      MPI_Gather(values[i].counters, NUM_TORUS_LINKS * numevents,
+	  MPI_UNSIGNED_LONG_LONG, allCounters, NUM_TORUS_LINKS * numevents,
+	  MPI_UNSIGNED_LONG_LONG, masterRank, profile_comm);
       if(isMaster) {
         MPI_Group world, profile_group;
         MPI_Comm_group(MPI_COMM_WORLD, &world);
@@ -174,7 +177,7 @@ INLINE void PROFILER_FINALIZE() {
           MPIX_Rank2torus(world_ranks[j], coords); 
           fprintf(dataFile,"%d %d ",i,j);
           fprintf(dataFile,"%d %d %d %d %d %d ** ",coords[0],coords[1],coords[2],coords[3],coords[4],coords[5]);
-          for(unsigned int k = 0; k < 10*numevents; k++) {
+          for(unsigned int k = 0; k < NUM_TORUS_LINKS * numevents; k++) {
             fprintf(dataFile,"%lu ", allCounters[cnt++]);
           }
           fprintf(dataFile,"\n");
