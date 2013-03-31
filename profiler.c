@@ -44,13 +44,13 @@ INLINE void PROFILER_INIT()
   MPI_Comm_size(MPI_COMM_WORLD,&numranks);
   int coords[6], tmasterRank;
   MPIX_Rank2torus(myrank, coords);
+
+  /* choose the MPI rank on (0, 0, 0, 0, 0) [0] as the master rank */
   if(coords[0]+coords[1]+coords[2]+coords[3]+coords[4]+coords[5] == 0) {
     isMaster = 1;
+    printf("Init intercepted by bgqcounter unit\n");
   } else {
     isMaster = 0;
-  }
-  if(isMaster) {
-    printf("Init intercepted by bgqcounter unit\n");
   }
 
   char *filename = getenv("BGQ_COUNTER_FILE");
@@ -71,16 +71,21 @@ INLINE void PROFILER_INIT()
   }
 #endif
 
+  /* split communicator based on the T dimension */
   isZero = (coords[5] == 0) ? 1 : 0;
   MPI_Comm_split(MPI_COMM_WORLD, isZero, myrank, &profile_comm);
+
 #if BGQ_DEBUG
   if(isMaster) {
     printf("Communicator split done, find master\n");
   }
 #endif
 
+  /* Every process needs to know the master rank in profile_comm to know
+     the root of the broadcast */
   coords[0] = coords[1] = coords[2] = coords[3] = coords[4] = coords[5] = 0;
   MPIX_Torus2rank(coords, &tmasterRank);
+
 #if BGQ_DEBUG
   if(isMaster) {
     printf("Found master, informing master\n");
@@ -90,7 +95,10 @@ INLINE void PROFILER_INIT()
   if(isMaster) {
     MPI_Comm_rank(profile_comm, &masterRank);
   }
+
+  /* Broadcast the rank of the master in profile_comm */
   MPI_Bcast(&masterRank, 1, MPI_INT, tmasterRank, MPI_COMM_WORLD);
+
 #if BGQ_DEBUG
   if(isMaster) {
     printf("Informed master, attaching counters\n");
@@ -127,6 +135,8 @@ INLINE void PROFILER_PCONTROL(int ctrl) {
   }
   if(isZero) {
     if(ctrl == 0 && curset == 0) return;
+
+    /* Save the current counter values and change curset to the new value of ctrl */
     if(curset != 0) {
       unsigned int cnt = 0;
       uint64_t val;
@@ -156,19 +166,24 @@ INLINE void PROFILER_FINALIZE() {
   }
   if(isZero) {
     for(unsigned int i = 1; i <= maxset; i++) {
+      /* collect all counter data into allCounters */
       MPI_Gather(values[i].counters, NUM_TORUS_LINKS * numevents,
 	  MPI_UNSIGNED_LONG_LONG, allCounters, NUM_TORUS_LINKS * numevents,
 	  MPI_UNSIGNED_LONG_LONG, masterRank, profile_comm);
+
       if(isMaster) {
         MPI_Group world, profile_group;
         MPI_Comm_group(MPI_COMM_WORLD, &world);
         MPI_Comm_group(profile_comm, &profile_group);
+
         int *world_ranks, *profile_ranks;
         profile_ranks = (int*)malloc(nranks*sizeof(int));
         world_ranks = (int*)malloc(nranks*sizeof(int));
         for(unsigned int j = 0; j < nranks; j++) {
           profile_ranks[j] = j;
         }
+
+	/* find the ranks in MPI_COMM_WORLD for all processes in profile_comm */
         MPI_Group_translate_ranks(profile_group, nranks, profile_ranks, world, world_ranks);
         unsigned int cnt = 0;
         int coords[6];
