@@ -172,7 +172,7 @@ INLINE void PROFILER_FINALIZE() {
         for(unsigned int j = 0; j < nranks; j++) {
           //MPIX_Rank2torus(j*Kernel_ProcessCount(), coords); 
           MPIX_Rank2torus(world_ranks[j], coords); 
-          fprintf(dataFile,"%d %d ",i,j);
+          fprintf(dataFile,"%d %d ",i,world_ranks[j]);
           fprintf(dataFile,"%d %d %d %d %d %d ** ",coords[0],coords[1],coords[2],coords[3],coords[4],coords[5]);
           for(unsigned int k = 0; k < 10*numevents; k++) {
             fprintf(dataFile,"%lu ", allCounters[cnt++]);
