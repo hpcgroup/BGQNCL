@@ -14,7 +14,16 @@ extern "C" {
 int MPI_Init(int *argc, char ***argv)
 {
   int ret;
-  ret =  PMPI_Init(argc,argv);
+  ret =  PMPI_Init(argc, argv);
+  PROFILER_INIT();
+  /* call the init routines */
+  return ret;
+}
+
+int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
+{
+  int ret;
+  ret =  PMPI_Init_thread(argc, argv, required, provided);
   PROFILER_INIT();
   /* call the init routines */
   return ret;
@@ -27,7 +36,6 @@ int MPI_Finalize(void)
   PROFILER_FINALIZE();
   return PMPI_Finalize();
 }
-
 
 /* Pcontrol */
 int MPI_Pcontrol(const int ctrl, ...) 
