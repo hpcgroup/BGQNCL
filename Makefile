@@ -6,23 +6,25 @@ COPTS   = -c -O3
 CXXOPTS = -c -O3
 LOPTS   = 
 INC	= -I./
-LIBS	= libprofiler.a -L /soft/perftools/bgpm/lib/ -lbgpm -lrt -lstdc++
+BGPM = /bgsys/drivers/ppcfloor/bgpm
+#BGPM = /soft/perftools/bgpm
+LIBS	= libprofiler.a -L $(BGPM)/lib -lbgpm -lrt -lstdc++
 
 all: libprofiler.a
-test-all: simple jacobi2dc jacobi2dcc
+test-all: simple 
 
 libprofiler.a: intercepts.o profiler.o
-	ar cr libprofiler.a intercepts.o profiler.o
+	ar cr $@ $^
 
 profiler.o: profiler.c profiler.h
-	$(CC) $(COPTS) -o profiler.o profiler.c ${INC}
+	$(CC) $(COPTS) -o $@ $< ${INC}
 
 intercepts.o: intercepts.c intercepts.h profiler.h
-	$(CC) $(COPTS) -o intercepts.o intercepts.c ${INC}
+	$(CC) $(COPTS) -o $@ $< ${INC}
 
 simple:	simple.c libprofiler.a
-	$(CC) $(COPTS) simple.c -o simple.o $(INC)
-	$(CXX) -o simple simple.o $(LIBS)
+	$(CC) $(COPTS) $< -o simple.o $(INC)
+	$(CXX) -o $@ simple.o $(LIBS)
 
 clean:
 	rm -f *.o libprofiler.a simple
