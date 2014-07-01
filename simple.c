@@ -6,7 +6,9 @@ int main(int argc, char** argv) {
   int rank, size;
   MPI_Status status;
   int send[100000],recv[100000];
-  MPI_Init(&argc,&argv);
+  //MPI_Init(&argc,&argv);
+  int asked=MPI_THREAD_SINGLE, provided;
+  MPI_Init_thread(&argc,&argv, asked, &provided);
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   MPI_Comm_size(MPI_COMM_WORLD,&size);
   MPI_Comm comm;
