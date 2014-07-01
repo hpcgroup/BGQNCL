@@ -1,0 +1,26 @@
+What? Library to collect network-based counters on BG/Q
+
+How? Transparent interception of MPI_Init, MPI_Pcontrol, and MPI_Finalize.
+Use MPI_Pcontrol around regions of interest. The argument passed to 
+MPI_Pcontrol identifies the region. Multiple calls with same argument
+leads to summation of counter values during such executions. Argument
+value 0 is assumed at startup and is used by the library as a stopper.
+Use positive values for specify start of your region of interest and
+0 to mark the end. You can implicitly mark end of a region by starting
+a new region. 
+
+Limitation: Argument has to be <=9.
+
+Compilation:
+1. In Makefile, point BGPM to installation location of bgpm.
+2. make
+
+Usage:
+Link the profiler before your MPI library. Here is the link line that works
+for me:
+
+$(CC) -o mypgm mybin.o libprofiler.a -L $(BGPM)/lib -lbgpm -lrt -lstdc++
+
+Test:
+make test-all
+Run the binary simple without any arguments on >= 2 processes.
