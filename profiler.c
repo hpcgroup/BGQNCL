@@ -34,6 +34,7 @@ UPC_NW_LINK_E_PLUS };
 
 typedef struct _counters {
   uint64_t counters[60];
+  double time;
 } Counters;
 
 Counters values[NUM_REGIONS];
@@ -124,6 +125,7 @@ INLINE void PROFILER_INIT()
       for(unsigned int j = 0; j < NUM_TORUS_LINKS * numevents; j++) {
         values[i].counters[j] = 0;
       }
+      values[i].time = 0;
     }
   }
   if(isMaster) {
@@ -140,6 +142,7 @@ INLINE void PROFILER_PCONTROL(int ctrl) {
 
     /* Save the current counter values and change curset to the new value of ctrl */
     if(curset != 0) {
+      values[curset].time += MPI_Wtime();
       unsigned int cnt = 0;
       uint64_t val;
       unsigned int numEvts = Bgpm_NumEvents(hNWSet);
@@ -151,7 +154,10 @@ INLINE void PROFILER_PCONTROL(int ctrl) {
         }
       }
     }
-    if(ctrl != 0) Bgpm_ResetStart(hNWSet);
+    if(ctrl != 0) {
+      Bgpm_ResetStart(hNWSet);
+      values[ctrl].time -= MPI_Wtime();
+    }
     curset = ctrl;
     if(curset > maxset) maxset = ctrl;
     
@@ -160,11 +166,13 @@ INLINE void PROFILER_PCONTROL(int ctrl) {
 
 INLINE void PROFILER_FINALIZE() {
   uint64_t *allCounters;
+  double *times;
   int nranks;
   if(isMaster) {
     printf("Finalize intercepted: numevents: %u, max set: %u\n",numevents, maxset);
     MPI_Comm_size(profile_comm,&nranks);
     allCounters = (uint64_t*) malloc(NUM_TORUS_LINKS * numevents * nranks *sizeof(uint64_t));
+    times = (double*) malloc(nranks * sizeof(double));
   }
   if(isZero) {
     for(unsigned int i = 1; i <= maxset; i++) {
@@ -172,6 +180,8 @@ INLINE void PROFILER_FINALIZE() {
       MPI_Gather(values[i].counters, NUM_TORUS_LINKS * numevents,
 	  MPI_UNSIGNED_LONG_LONG, allCounters, NUM_TORUS_LINKS * numevents,
 	  MPI_UNSIGNED_LONG_LONG, masterRank, profile_comm);
+      MPI_Gather(&values[i].time, 1, MPI_DOUBLE, times, 1, MPI_DOUBLE, masterRank, 
+                profile_comm);
 
       if(isMaster) {
         MPI_Group world, profile_group;
@@ -199,6 +209,19 @@ INLINE void PROFILER_FINALIZE() {
           }
           fprintf(dataFile,"\n");
         }
+        double min, max, avg = 0;
+        min = max = times[0];
+        for(unsigned j = 0; j < nranks; j++) {
+          avg += times[j];
+          if(min > times[j]) {
+            min = times[j];
+          }
+          if(max < times[j]) {
+            max = times[j];
+          }
+        }
+        avg /=  nranks;
+        printf("Timing Summary: min - %.3f s, avg - %.3f s, max - %.3f s\n", min, avg, max);
         free(profile_ranks); free(world_ranks);
       }
     }
@@ -208,6 +231,7 @@ INLINE void PROFILER_FINALIZE() {
       fclose(dataFile);
     printf("Done profiling, exiting\n");
     free(allCounters);
+    free(times);
   }
 }
 #ifdef __cplusplus
