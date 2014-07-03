@@ -54,10 +54,12 @@ INLINE void PROFILER_INIT()
   }
 
   char *filename = getenv("BGQ_COUNTER_FILE");
-  if(filename != NULL)
-    dataFile = fopen(filename,"w");
-  else
-    dataFile = stdout;
+  if(isMaster) {
+    if(filename != NULL)
+      dataFile = fopen(filename,"w");
+    else
+      dataFile = stdout;
+  }
 #if BGQ_DEBUG
   if(isMaster) {
     printf("File opened, Initializing BGPM\n");
@@ -197,12 +199,13 @@ INLINE void PROFILER_FINALIZE() {
           }
           fprintf(dataFile,"\n");
         }
-        fclose(dataFile);
         free(profile_ranks); free(world_ranks);
       }
     }
   }
   if(isMaster) {
+    if(dataFile != stdout)
+      fclose(dataFile);
     printf("Done profiling, exiting\n");
     free(allCounters);
   }

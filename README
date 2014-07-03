@@ -19,7 +19,7 @@ Output format:
 Each line of the output file contains data for a physical node. The meta 
 data for a line is:
 
-local_rank (ignore) world_rank coords[0] coords[1] coords[2] coords[3] coords[4] coords[5] ** linkdata
+Pcontrol_region world_rank coords[0] coords[1] coords[2] coords[3] coords[4] coords[5] ** linkdata
 
 link data = (d_A-) (d_A+) (d_B-) (d_B+) (d_C-) (d_C+) (d_D-) (d_D+) (d_E-) (d_E+)
 
