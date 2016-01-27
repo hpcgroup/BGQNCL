@@ -20,8 +20,9 @@
 #include "bgpm/include/bgpm.h"
 
 #define BGQ_DEBUG	0
-#define NUM_REGIONS	10
+#define NUM_REGIONS	100
 #define NUM_TORUS_LINKS	10
+#define ROOT_RANK 0
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,9 +59,11 @@ INLINE void PROFILER_INIT()
   MPIX_Rank2torus(myrank, coords);
 
   /* choose the MPI rank on (0, 0, 0, 0, 0) [0] as the master rank */
-  if(coords[0]+coords[1]+coords[2]+coords[3]+coords[4]+coords[5] == 0) {
+  if(coords[0]+coords[1]+coords[2]+coords[3]+coords[4] == 0 && coords[5] == ROOT_RANK) {
     isMaster = 1;
+#if BGQ_DEBUG
     printf("Init intercepted by bgqcounter unit\n");
+#endif
   } else {
     isMaster = 0;
   }
@@ -86,7 +89,7 @@ INLINE void PROFILER_INIT()
 #endif
 
   /* split communicator based on the T dimension */
-  isZero = (coords[5] == 0) ? 1 : 0;
+  isZero = (coords[5] == ROOT_RANK) ? 1 : 0;
   MPI_Comm_split(MPI_COMM_WORLD, isZero, myrank, &profile_comm);
 
 #if BGQ_DEBUG
@@ -97,7 +100,7 @@ INLINE void PROFILER_INIT()
 
   /* Every process needs to know the master rank in profile_comm to know
      the root of the broadcast */
-  coords[0] = coords[1] = coords[2] = coords[3] = coords[4] = coords[5] = 0;
+  coords[0] = coords[1] = coords[2] = coords[3] = coords[4] = 0; coords[5] = ROOT_RANK;
   MPIX_Torus2rank(coords, &tmasterRank);
 
 #if BGQ_DEBUG
@@ -122,12 +125,12 @@ INLINE void PROFILER_INIT()
   if(isZero) {
     hNWSet = Bgpm_CreateEventSet();
     Bgpm_AddEvent(hNWSet, PEVT_NW_USER_PP_SENT);
-    Bgpm_AddEvent(hNWSet, PEVT_NW_USER_DYN_PP_SENT);
-    Bgpm_AddEvent(hNWSet, PEVT_NW_USER_ESC_PP_SENT);
-    Bgpm_AddEvent(hNWSet, PEVT_NW_USER_SUBC_COL_SENT);
-    Bgpm_AddEvent(hNWSet, PEVT_NW_USER_PP_RECV);
-    Bgpm_AddEvent(hNWSet, PEVT_NW_USER_PP_RECV_FIFO);
-    numevents = 6;
+    //Bgpm_AddEvent(hNWSet, PEVT_NW_USER_DYN_PP_SENT);
+    //Bgpm_AddEvent(hNWSet, PEVT_NW_USER_ESC_PP_SENT);
+    //Bgpm_AddEvent(hNWSet, PEVT_NW_USER_SUBC_COL_SENT);
+    //Bgpm_AddEvent(hNWSet, PEVT_NW_USER_PP_RECV);
+    //Bgpm_AddEvent(hNWSet, PEVT_NW_USER_PP_RECV_FIFO);
+    numevents = 1;
     if (Bgpm_Attach(hNWSet, UPC_NW_ALL_TORUS_LINKS, 0) != 0) {
       printf("Error: something went wrong in attaching link counters\n");
     }
@@ -140,13 +143,17 @@ INLINE void PROFILER_INIT()
     }
   }
   if(isMaster) {
+#if BGQ_DEBUG
     printf("Init intercept complete\n");
+#endif
   }
 }
 
 INLINE void PROFILER_PCONTROL(int ctrl) {
   if(isMaster) {
+#if BGQ_DEBUG
     printf("Pcontrol change from %d to %d\n",curset,ctrl);
+#endif
   }
   if(isZero) {
     if(ctrl == 0 && curset == 0) return;
@@ -180,7 +187,9 @@ INLINE void PROFILER_FINALIZE() {
   double *times;
   int nranks;
   if(isMaster) {
+#if BGQ_DEBUG
     printf("Finalize intercepted: numevents: %u, max set: %u\n",numevents, maxset);
+#endif
     MPI_Comm_size(profile_comm,&nranks);
     allCounters = (uint64_t*) malloc(NUM_TORUS_LINKS * numevents * nranks *sizeof(uint64_t));
     times = (double*) malloc(nranks * sizeof(double));
@@ -232,7 +241,7 @@ INLINE void PROFILER_FINALIZE() {
           }
         }
         avg /=  nranks;
-        printf("Timing Summary: min - %.3f s, avg - %.3f s, max - %.3f s\n", min, avg, max);
+        printf("Timing Summary for region %d: min - %.3f s, avg - %.3f s, max - %.3f s\n", i, min, avg, max);
         free(profile_ranks); free(world_ranks);
       }
     }
@@ -240,7 +249,9 @@ INLINE void PROFILER_FINALIZE() {
   if(isMaster) {
     if(dataFile != stdout)
       fclose(dataFile);
+#if BGQ_DEBUG
     printf("Done profiling, exiting\n");
+#endif
     free(allCounters);
     free(times);
   }
