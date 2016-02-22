@@ -9,7 +9,7 @@
  * LLNL-CODE-678958. All rights reserved.
  *
  * This file is part of BGQNCL. For details, see:
- * https://github.com/scalability-llnl/bgqncl
+ * https://github.com/LLNL/bgqncl
  * Please also read the LICENSE file for our notice and the LGPL.
  */
 
