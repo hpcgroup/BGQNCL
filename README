@@ -40,5 +40,3 @@ $(CC) -o mypgm mybin.o libprofiler.a -L $(BGPM)/lib -lbgpm -lrt -lstdc++
 Test:
 make test-all
 Run the binary simple without any arguments on >= 2 processes.
-
-LLNL Release Number: LLNL-CODE-678958
