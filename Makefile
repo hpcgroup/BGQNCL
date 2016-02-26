@@ -1,4 +1,19 @@
-#=============================================================================
+##############################################################################
+# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# Written by:
+#     Nikhil Jain <nikhil.jain@acm.org>
+#     Abhinav Bhatele <bhatele@llnl.gov>
+#
+# LLNL-CODE-678958. All rights reserved.
+#
+# This file is part of BGQNCL. For details, see:
+# https://github.com/LLNL/bgqncl
+# Please also read the LICENSE file for our notice and the LGPL.
+##############################################################################
+
+
 # Common Variables
 CC      = mpixlc
 CXX     = mpixlcxx
