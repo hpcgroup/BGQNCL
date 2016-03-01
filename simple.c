@@ -38,22 +38,15 @@ int main(int argc, char** argv) {
 
   MPI_Comm_split(MPI_COMM_WORLD,1,rank,&comm);
   MPI_Pcontrol(1);
-  MPI_Sendrecv(send, 10, MPI_INT, (rank+3)%size, 0,
-               recv, 10, MPI_INT, (rank-3+size)%size, 0,
-                comm, &status);
+  sleep(1 * rank);
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Pcontrol(2);
-  MPI_Sendrecv(send, 100000, MPI_INT, (rank+3)%size, 0,
-               recv, 100000, MPI_INT, (rank-3+size)%size, 0,
-                comm, &status);
-  MPI_Alltoall(send,10, MPI_INT, recv, 10, MPI_INT, MPI_COMM_WORLD);
+  sleep(10 * rank);
   MPI_Pcontrol(3);
-  MPI_Alltoall(send,1, MPI_INT, recv, 1, MPI_INT, comm);
+  sleep(2 * rank);
   MPI_Pcontrol(0);
-  MPI_Comm_split(MPI_COMM_WORLD,rank%2,rank,&comm);
   MPI_Pcontrol(4);
-  if(rank%2)
-  MPI_Alltoall(send,100, MPI_INT, recv, 100, MPI_INT, comm);
+  sleep(3 * rank);
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 }

@@ -15,15 +15,13 @@
 
 
 # Common Variables
-CC      = mpixlc
-CXX     = mpixlcxx
-COPTS   = -c -O3
-CXXOPTS = -c -O3
+CC      ?= cc
+CXX     ?= CC
+COPTS   = -c -O3 -g
+CXXOPTS = -c -O3 -g
 LOPTS   = 
 INC	= -I./
-BGPM = /bgsys/drivers/ppcfloor/bgpm
-#BGPM = /soft/perftools/bgpm
-LIBS	= libprofiler.a -L $(BGPM)/lib -lbgpm -lrt -lstdc++
+LIBS	= libprofiler.a
 
 all: libprofiler.a
 test-all: simple 
