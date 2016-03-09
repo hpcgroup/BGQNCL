@@ -1,7 +1,7 @@
 BGQNCL v1.1
 ===========
 
-**B**lue **G**ene/**Q** **N**etwork **P**erformance **C**ounters Monitoring **L**ibrary
+**B**lue **G**ene/**Q** **N**etwork Performance **C**ounters Monitoring **L**ibrary
 
 BGQNCL is a library to monitor and record network performance counters on the
 5D torus interconnection network of IBM’s Blue Gene/Q platform.  It accesses
@@ -58,3 +58,33 @@ $(CC) -o mypgm mybin.o libprofiler.a -L $(BGPM)/lib -lbgpm -lrt -lstdc++
 make test-all
 ```
 Run the binary simple without any arguments on >= 2 processes.
+
+### Reference
+
+Any published work that utilizes this library should include the following
+reference:
+
+```
+Abhinav Bhatele, Nikhil Jain, Katherine E. Isaacs, Ronak Buch, Todd Gamblin,
+Steven H. Langer, and Laxmikant V. Kale. Optimizing the performance of parallel
+applications on a 5D torus via task mapping. In Proceedings of IEEE
+International Conference on High Performance Computing, HiPC '14. IEEE Computer
+Society, December 2014. LLNL-CONF-655465.
+```
+
+### Release
+
+Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+Produced at the Lawrence Livermore National Laboratory.
+
+Written by:
+```
+    Nikhil Jain <nikhil.jain@acm.org>
+    Abhinav Bhatele <bhatele@llnl.gov>
+```
+
+LLNL-CODE-678958. All rights reserved.
+
+This file is part of BGQNCL. For details, see:
+https://github.com/LLNL/bgqncl
+Please also read the LICENSE file for our notice and the LGPL.
